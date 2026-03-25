@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healing Frequency Lab · 432Hz純正律</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --teal: #7ab8b0;
+  --teal-glow: rgba(122,184,176,0.15);
+  --teal-border: rgba(122,184,176,0.32);
+  --teal-dim: rgba(122,184,176,0.06);
+  --bg: #07100f;
+  --text: #b8d4d0;
+  --text-dim: #3a5450;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Georgia, serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 2.5rem 1.4rem 4rem; gap: 2rem;
+}
+.header { text-align: center; }
+.header-sub { font-size: 0.6rem; letter-spacing: 0.4em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+.header-title { font-size: 1rem; letter-spacing: 0.14em; color: var(--teal); }
+.header-note { font-size: 0.62rem; color: var(--text-dim); margin-top: 0.35rem; letter-spacing: 0.1em; }
+
+.orb-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+#orb {
+  width: 92px; height: 92px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #1a3530, #0a1a18 65%, #040d0c);
+  box-shadow: 0 0 14px 2px rgba(100,180,170,0.07);
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: #2a4a45; transition: all 0.6s;
+}
+#orb.playing {
+  background: radial-gradient(circle at 38% 32%, #a0d8d0, #3a8880 50%, #0d2420);
+  box-shadow: 0 0 50px 16px rgba(100,200,190,0.32), 0 0 100px 32px rgba(100,200,190,0.10);
+  color: #e0faf6;
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { box-shadow: 0 0 40px 12px rgba(100,200,190,0.25), 0 0 80px 24px rgba(100,200,190,0.08); }
+  50%      { box-shadow: 0 0 65px 22px rgba(100,200,190,0.40), 0 0 120px 40px rgba(100,200,190,0.13); }
+}
+#timer { font-size: 0.78rem; font-family: monospace; color: var(--text-dim); letter-spacing: 0.08em; transition: color 0.4s; }
+#timer.playing { color: var(--teal); }
+#note-info { font-size: 0.66rem; color: var(--text-dim); margin-left: 0.7rem; }
+
+.mood-bar { width: 100%; max-width: 460px; height: 2px; border-radius: 2px; background: #0d2420; position: relative; overflow: hidden; }
+.mood-bar-fill {
+  position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(122,200,190,0.45), transparent);
+  animation: sweep 5s ease-in-out infinite;
+}
+@keyframes sweep { 0% { left: -60%; } 100% { left: 100%; } }
+
+section { width: 100%; max-width: 460px; }
+.section-label { font-size: 0.58rem; letter-spacing: 0.22em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.6rem; }
+
+.grid { display: grid; gap: 0.35rem; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.btn {
+  background: var(--teal-dim); border: 1px solid rgba(122,184,176,0.1);
+  color: var(--text-dim); padding: 0.5rem 0.5rem; border-radius: 5px;
+  cursor: pointer; text-align: left; line-height: 1.4; transition: all 0.15s;
+  font-family: Georgia, serif;
+}
+.btn:hover { background: rgba(122,184,176,0.1); }
+.btn.active { background: var(--teal-glow); border-color: var(--teal-border); color: var(--teal); }
+.btn-name { display: block; font-weight: bold; font-size: 0.78rem; }
+.btn-desc { display: block; font-size: 0.6rem; margin-top: 0.1rem; opacity: 0.55; }
+
+.vol-rows { display: flex; flex-direction: column; gap: 0.75rem; }
+.vol-row { display: flex; flex-direction: column; gap: 0.25rem; }
+.vol-header { display: flex; justify-content: space-between; align-items: baseline; }
+.vol-label { font-size: 0.66rem; color: var(--text-dim); letter-spacing: 0.08em; }
+.vol-val { font-size: 0.74rem; color: var(--teal); font-family: monospace; }
+input[type=range] { width: 100%; accent-color: var(--teal); cursor: pointer; }
+
+.footer { font-size: 0.62rem; color: var(--text-dim); text-align: center; line-height: 2; max-width: 360px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">Healing Frequency Lab</div>
+  <div class="header-title">癒し × シューマン波 × ライフ周波数</div>
+  <div class="header-note">純正律 · A = 432 Hz</div>
+</div>
+
+<div class="orb-wrap">
+  <div id="orb" onclick="toggle()">▷</div>
+  <div><span id="timer">00:00</span><span id="note-info"></span></div>
+</div>
+
+<div class="mood-bar"><div class="mood-bar-fill"></div></div>
+
+<section>
+  <div class="section-label">シューマン共鳴波</div>
+  <div class="grid grid-4" id="schu-grid"></div>
+</section>
+
+<section>
+  <div class="section-label">ライフ周波数（ソルフェジオ）</div>
+  <div class="grid grid-4" id="life-grid"></div>
+</section>
+
+<section>
+  <div class="section-label">音量バランス</div>
+  <div class="vol-rows" id="vol-rows"></div>
+</section>
+
+<div class="footer">
+  純正律 A=432Hz · ショパン風ランダムメロディ<br>
+  シューマン波・ライフ周波数は純音として重ねています<br>
+  スピーカー / ヘッドフォン両対応 · 完全オフライン
+</div>
+
+<script>
+// ── Just Intonation, A=432Hz ──────────────────────────────
+const A4  = 432;
+const C4  = A4 * 4/5 * (2/1);   // 345.6 ... recalc properly
+// C4 from A4=432: A4=432, A3=216, C4 = 216*(4/3)*(3/4)*... 
+// Simpler: C4 = 432 * (4/5) = 345.6? No.
+// A=432, so: C is minor third below A in just: ratio 6/5
+// A4=432, C4 = 432*(6/5)/... let's use ratio approach
+// In C major just: C=1, D=9/8, E=5/4, F=4/3, G=3/2, A=5/3, B=15/8
+// So A = C*(5/3) => C = A/(5/3) = A*3/5
+// C4 = 432*(3/5) = 259.2 Hz (one octave above C3=129.6)
+const C4_JI = 432 * 3 / 5; // 259.2 Hz
+
+function jiScale(root) {
+  // Pure C major ratios
+  return [
+    root,            // C
+    root * 9/8,      // D
+    root * 5/4,      // E
+    root * 4/3,      // F
+    root * 3/2,      // G
+    root * 5/3,      // A = 432 ✓
+    root * 15/8,     // B
+    root * 2,        // C oct
+    root * 2*(9/8),  // D
+    root * 2*(5/4),  // E
+    root * 2*(3/2),  // G
+  ];
+}
+
+const SCALE = jiScale(C4_JI);
+// Verify: SCALE[5] = C4_JI * 5/3 = 259.2 * 5/3 = 432 ✓
+
+// Pad voicing: open transparent chord — C4, G4, E5, C5 (wide spread)
+const PAD_FREQS = [
+  C4_JI,            // C4  259.2
+  C4_JI * 3/2,      // G4  388.8
+  C4_JI * 2,        // C5  518.4
+  C4_JI * 2*(5/4),  // E5  648.0
+];
+
+const SCHU = [
+  { name:"7.83 Hz",  freq:7.83,  desc:"地球基本共鳴" },
+  { name:"14.3 Hz",  freq:14.3,  desc:"第2高調波" },
+  { name:"20.8 Hz",  freq:20.8,  desc:"第3高調波" },
+  { name:"Off",      freq:0,     desc:"なし" },
+];
+
+const LIFE = [
+  { name:"396 Hz",  freq:396,  desc:"恐怖の解放" },
+  { name:"417 Hz",  freq:417,  desc:"変化の促進" },
+  { name:"528 Hz",  freq:528,  desc:"DNA修復" },
+  { name:"639 Hz",  freq:639,  desc:"関係・調和" },
+  { name:"741 Hz",  freq:741,  desc:"表現・解決" },
+  { name:"727 Hz",  freq:727,  desc:"免疫・活性化" },
+  { name:"787 Hz",  freq:787,  desc:"神経系サポート" },
+  { name:"852 Hz",  freq:852,  desc:"直感・霊性" },
+  { name:"880 Hz",  freq:880,  desc:"高次意識" },
+  { name:"Off",     freq:0,    desc:"なし" },
+];
+
+// ── State ─────────────────────────────────────────────────
+let schuIdx = 0, lifeIdx = 2;
+// volState holds the current 0-100 values
+const volState = { pad:40, melody:50, schu:20, life:20 };
+// gainScales: multiplier applied on top of vol/100
+const gainScales = { pad:0.5, melody:0.6, schu:0.06, life:0.05 };
+
+let playing = false, elapsed = 0, ticker = null;
+let AC = null, alive = false, mTimer = null;
+let padNodes = [];
+let G = {}; // { pad, melody, schu, life } — GainNodes
+
+// ── UI ────────────────────────────────────────────────────
+function buildGrid(id, items, cur, cb) {
+  const el = document.getElementById(id);
+  items.forEach((item, i) => {
+    const b = document.createElement('button');
+    b.className = 'btn' + (i === cur ? ' active' : '');
+    b.innerHTML = `<span class="btn-name">${item.name}</span><span class="btn-desc">${item.desc}</span>`;
+    b.onclick = () => { setActive(id, i); cb(i); };
+    el.appendChild(b);
+  });
+}
+
+function buildVols() {
+  const el = document.getElementById('vol-rows');
+  [
+    { key:'pad',    label:'パッドシンセ' },
+    { key:'melody', label:'メロディ' },
+    { key:'schu',   label:'シューマン波' },
+    { key:'life',   label:'ライフ周波数' },
+  ].forEach(({ key, label }) => {
+    const row = document.createElement('div');
+    row.className = 'vol-row';
+    row.innerHTML = `
+      <div class="vol-header">
+        <span class="vol-label">${label}</span>
+        <span class="vol-val" id="vv-${key}">${volState[key]}%</span>
+      </div>
+      <input type="range" min="0" max="100" step="1" value="${volState[key]}" id="vs-${key}">`;
+    el.appendChild(row);
+    // Fix: use 'input' event, read value from event target
+    row.querySelector('input').addEventListener('input', function() {
+      const v = parseInt(this.value, 10);
+      volState[key] = v;
+      document.getElementById('vv-' + key).textContent = v + '%';
+      applyVol(key);
+    });
+  });
+}
+
+function setActive(id, i) {
+  document.getElementById(id).querySelectorAll('.btn').forEach((b, j) => b.classList.toggle('active', j === i));
+}
+
+buildGrid('schu-grid', SCHU, schuIdx, i => {
+  schuIdx = i;
+  if (playing && AC && G.schu) swapTone('_schuOsc', G.schu, SCHU[i].freq);
+});
+buildGrid('life-grid', LIFE, lifeIdx, i => {
+  lifeIdx = i;
+  if (playing && AC && G.life) swapTone('_lifeOsc', G.life, LIFE[i].freq);
+});
+buildVols();
+
+// ── Audio helpers ─────────────────────────────────────────
+function makeReverb(ac) {
+  const conv = ac.createConvolver();
+  const len = ac.sampleRate * 4;
+  const ir = ac.createBuffer(2, len, ac.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.6);
+    }
+  }
+  conv.buffer = ir;
+  return conv;
+}
+
+// Transparent pad: widely spaced open fifths/octaves, pure sine, barely there
+function startPad(dest) {
+  const nodes = [];
+  const gains = [0.06, 0.05, 0.04, 0.03];
+  PAD_FREQS.forEach((f, i) => {
+    const osc = AC.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f + (Math.random() - 0.5) * 0.08;
+    const g = AC.createGain();
+    g.gain.value = gains[i];
+    // ultra-slow tremolo for breath
+    const lfo = AC.createOscillator();
+    lfo.frequency.value = 0.025 + Math.random() * 0.03;
+    const lg = AC.createGain();
+    lg.gain.value = 0.007;
+    lfo.connect(lg); lg.connect(g.gain);
+    osc.connect(g); g.connect(dest);
+    osc.start(); lfo.start();
+    nodes.push(osc, lfo);
+  });
+  return nodes;
+}
+
+// Chopin-style note: soft sine fundamental, very gentle harmonics,
+// slow attack (0.2s), long singing decay like a piano with sustain pedal
+function playNote(dest, freq, velScale) {
+  const vel = velScale || 1.0;
+  const now = AC.currentTime;
+  const env = AC.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(0.22 * vel, now + 0.18); // slow attack
+  env.gain.exponentialRampToValueAtTime(0.07 * vel, now + 2.5);
+  env.gain.exponentialRampToValueAtTime(0.001, now + 9.0);
+  env.connect(dest);
+
+  // Fundamental: sine (pure, piano-like in upper register)
+  const o1 = AC.createOscillator(); o1.type = 'sine';
+  o1.frequency.value = freq;
+  const g1 = AC.createGain(); g1.gain.value = 1.0;
+  o1.connect(g1); g1.connect(env); o1.start(now); o1.stop(now + 10);
+
+  // Octave (2:1) — very soft
+  const o2 = AC.createOscillator(); o2.type = 'sine';
+  o2.frequency.value = freq * 2;
+  const g2 = AC.createGain(); g2.gain.value = 0.08;
+  o2.connect(g2); g2.connect(env); o2.start(now); o2.stop(now + 10);
+
+  // Pure fifth (3:2) — adds warmth without harshness
+  const o3 = AC.createOscillator(); o3.type = 'sine';
+  o3.frequency.value = freq * 3 / 2;
+  const g3 = AC.createGain(); g3.gain.value = 0.04;
+  o3.connect(g3); g3.connect(env); o3.start(now); o3.stop(now + 10);
+
+  document.getElementById('note-info').textContent = '♩ ' + freq.toFixed(1) + ' Hz';
+}
+
+// Chopin-style melody: arpeggiated phrases, slight rubato feel,
+// stepwise motion with occasional leaps, some grace-note pairs
+function scheduleMelody(dest) {
+  // Start in mid range
+  let idx = 4;
+  // Phrase structure: play 3-5 note phrase, then longer pause
+  let phraseCount = 0;
+  let phraseLen = 3 + Math.floor(Math.random() * 3);
+
+  function next() {
+    if (!alive) return;
+
+    // Stepwise with occasional small leaps (Chopin-like)
+    const r = Math.random();
+    let step;
+    if (r < 0.45) step = 1;        // step up
+    else if (r < 0.80) step = -1;  // step down
+    else if (r < 0.90) step = 2;   // small leap up
+    else step = -2;                 // small leap down
+
+    // Gentle center gravity
+    if (idx >= 8) step = -Math.abs(step);
+    if (idx <= 1) step = Math.abs(step);
+
+    idx = Math.max(0, Math.min(SCALE.length - 1, idx + step));
+    playNote(dest, SCALE[idx], 1.0);
+
+    // Grace note: occasionally add a very soft quick note just before next
+    const hasGrace = Math.random() < 0.22;
+
+    phraseCount++;
+    let delay;
+
+    if (phraseCount >= phraseLen) {
+      // End of phrase: longer rest (rubato pause)
+      phraseCount = 0;
+      phraseLen = 3 + Math.floor(Math.random() * 4);
+      delay = 6000 + Math.random() * 8000;
+    } else {
+      // Within phrase: shorter, musical spacing
+      delay = 2500 + Math.random() * 3500;
+    }
+
+    if (hasGrace) {
+      // Grace note at 80% of delay time, soft
+      setTimeout(() => {
+        if (!alive) return;
+        const gi = Math.max(0, Math.min(SCALE.length - 1, idx + (Math.random() < 0.5 ? 1 : -1)));
+        playNote(dest, SCALE[gi], 0.3);
+      }, delay * 0.75);
+    }
+
+    mTimer = setTimeout(next, delay);
+  }
+  next();
+}
+
+function startTone(dest, freq) {
+  if (!freq) return null;
+  const o = AC.createOscillator();
+  o.type = 'sine'; o.frequency.value = freq;
+  o.connect(dest); o.start();
+  return o;
+}
+
+function swapTone(ref, gainNode, freq) {
+  try { window[ref] && window[ref].stop(); } catch(e) {}
+  window[ref] = startTone(gainNode, freq);
+}
+
+// Apply current volState to a live gain node
+function applyVol(key) {
+  if (!playing || !AC || !G[key]) return;
+  const target = volState[key] / 100 * gainScales[key];
+  G[key].gain.setTargetAtTime(target, AC.currentTime, 0.12);
+}
+
+// ── Start / Stop ──────────────────────────────────────────
+function startAll() {
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  if (AC.state === 'suspended') AC.resume();
+
+  const rev = makeReverb(AC);
+  rev.connect(AC.destination);
+
+  // Pad: very wet (mostly reverb for transparency)
+  const padMaster = AC.createGain();
+  padMaster.gain.value = volState.pad / 100 * gainScales.pad;
+  const padOut = AC.createGain();
+  const dryP = AC.createGain(); dryP.gain.value = 0.2;
+  const wetP = AC.createGain(); wetP.gain.value = 0.8;
+  padOut.connect(dryP); dryP.connect(padMaster);
+  padOut.connect(rev);  rev.connect(wetP); wetP.connect(padMaster);
+  padMaster.connect(AC.destination);
+  padNodes = startPad(padOut);
+
+  // Melody: generous reverb for Chopin hall sound
+  const melMaster = AC.createGain();
+  melMaster.gain.value = volState.melody / 100 * gainScales.melody;
+  const melOut = AC.createGain();
+  const dryM = AC.createGain(); dryM.gain.value = 0.28;
+  const wetM = AC.createGain(); wetM.gain.value = 0.72;
+  melOut.connect(dryM); dryM.connect(melMaster);
+  melOut.connect(rev);  rev.connect(wetM); wetM.connect(melMaster);
+  melMaster.connect(AC.destination);
+
+  // Schumann
+  const schuGain = AC.createGain();
+  schuGain.gain.value = volState.schu / 100 * gainScales.schu;
+  schuGain.connect(AC.destination);
+  window._schuOsc = startTone(schuGain, SCHU[schuIdx].freq);
+
+  // Life freq
+  const lifeGain = AC.createGain();
+  lifeGain.gain.value = volState.life / 100 * gainScales.life;
+  lifeGain.connect(AC.destination);
+  window._lifeOsc = startTone(lifeGain, LIFE[lifeIdx].freq);
+
+  // Store gain nodes for live updates
+  G = { pad: padMaster, melody: melMaster, schu: schuGain, life: lifeGain };
+
+  alive = true;
+  scheduleMelody(melOut);
+}
+
+function stopAll() {
+  alive = false;
+  clearTimeout(mTimer);
+  try { window._schuOsc && window._schuOsc.stop(); } catch(e) {}
+  try { window._lifeOsc && window._lifeOsc.stop(); } catch(e) {}
+  padNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  try { AC && AC.close(); } catch(e) {}
+  AC = null; G = {}; padNodes = [];
+  document.getElementById('note-info').textContent = '';
+}
+
+// ── Toggle ────────────────────────────────────────────────
+function toggle() {
+  const orb   = document.getElementById('orb');
+  const timer = document.getElementById('timer');
+  if (playing) {
+    stopAll();
+    playing = false;
+    clearInterval(ticker); elapsed = 0;
+    orb.textContent = '▷'; orb.classList.remove('playing');
+    timer.textContent = '00:00'; timer.classList.remove('playing');
+  } else {
+    startAll();
+    playing = true;
+    ticker = setInterval(() => {
+      elapsed++;
+      const m = Math.floor(elapsed / 60), s = elapsed % 60;
+      timer.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }, 1000);
+    orb.textContent = '◼'; orb.classList.add('playing');
+    timer.classList.add('playing');
+  }
+}
+</script>
+</body>
+</html>
